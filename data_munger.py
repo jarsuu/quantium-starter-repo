@@ -33,6 +33,8 @@ def extract_data(frame):
         processed_writer = csv.writer(
             processed_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
+        processed_writer.writerow(["sale", "date", "region"])
+
         for _, row in frame.iterrows():
             sale = calculate_sale(row["quantity"], row["price"])
             processed_writer.writerow([f"${sale}", row["date"], row["region"]])
