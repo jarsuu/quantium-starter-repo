@@ -24,20 +24,20 @@ def filter_pink_morsel(frame):
 
 def calculate_sale(quantity: int, price: str):
     price = float(price[1:])
-    sale = round(quantity * price, 2)
+    sales = round(quantity * price, 2)
 
-    return "{:.2f}".format(sale)
+    return "{:.2f}".format(sales)
 
 def extract_data(frame):
     with open("processed_data.csv", mode="w") as processed_file:
         processed_writer = csv.writer(
             processed_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-        processed_writer.writerow(["sale", "date", "region"])
+        processed_writer.writerow(["sales", "date", "region"])
 
         for _, row in frame.iterrows():
-            sale = calculate_sale(row["quantity"], row["price"])
-            processed_writer.writerow([sale, row["date"], row["region"]])
+            sales = calculate_sale(row["quantity"], row["price"])
+            processed_writer.writerow([sales, row["date"], row["region"]])
 
 if __name__ == "__main__":
     frame = concat_data()

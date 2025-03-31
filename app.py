@@ -7,19 +7,20 @@ import plotly.express as px
 import pandas as pd
 import plotly.graph_objs as go
 
-app = Dash()
+app = Dash(__name__)
 
 # Read csv file
 df = pd.read_csv("processed_data.csv")
+df = df.sort_values(by="date")
 
-df['sale'] = df['sale'].astype(float)
-df['sale_display'] = df['sale'].apply(lambda x: f"{x:.2f}")
+df['sales'] = df['sales'].astype(float)
+df['sales_display'] = df['sales'].apply(lambda x: f"{x:.2f}")
 
 # Sales per region
-df_region_sales = df.groupby(['date', 'region'], as_index=False)['sale'].sum()
+df_region_sales = df.groupby(['date', 'region'], as_index=False)['sales'].sum()
 
 # Total sales on day
-df_total_sales = df.groupby(['date'], as_index=False)['sale'].sum()
+df_total_sales = df.groupby(['date'], as_index=False)['sales'].sum()
 df_total_sales['region'] = 'Total'
 
 # Just show total sales for now
@@ -29,14 +30,14 @@ df_combined = pd.concat([df_total_sales], ignore_index=True)
 # Add lines for each region
 # for region in df_combined['region'].unique():
 #     region_df = df_combined[df_combined['region'] == region]
-#     fig.add_trace(go.Scatter(x=region_df['date'], y=region_df['sale'], mode='lines', name=region,
+#     fig.add_trace(go.Scatter(x=region_df['date'], y=region_df['sales'], mode='lines', name=region,
 #                              hovertemplate='<b>Date</b>: %{x|%d %b, %Y}' + '<br>' +
 #                              '<b>Sales</b>: $%{y:.2f}<extra></extra>',))
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(
     x=df_combined['date'], 
-    y=df_combined['sale'],
+    y=df_combined['sales'],
     mode='lines', 
     name='Total',
     hovertemplate='<b>Date</b>: %{x|%d %b, %Y}' + '<br>' +
@@ -71,7 +72,7 @@ app.layout = html.Div(style={'display': 'flex', 'flexDirection': 'column'}, chil
             dash_table.DataTable(
                 data=df.to_dict('records'),
                 columns=[
-                    {'id': 'sale_display', 'name': 'sales'},
+                    {'id': 'sales_display', 'name': 'sales'},
                     {'id': 'region', 'name': 'region'},
                     {'id': 'date', 'name': 'date'}
                 ],
@@ -86,7 +87,7 @@ app.layout = html.Div(style={'display': 'flex', 'flexDirection': 'column'}, chil
                     {
                         'if': {'column_id': c},
                         'textAlign': 'center'
-                    } for c in ['sale_display', 'date', 'region']
+                    } for c in ['sales_display', 'date', 'region']
                 ],
                 style_as_list_view=True
             )
