@@ -24,7 +24,7 @@ def filter_pink_morsel(frame):
 
 def calculate_sale(quantity: int, price: str):
     price = float(price[1:])
-    sale = quantity * price
+    sale = round(quantity * price, 2)
 
     return "{:.2f}".format(sale)
 
@@ -37,7 +37,7 @@ def extract_data(frame):
 
         for _, row in frame.iterrows():
             sale = calculate_sale(row["quantity"], row["price"])
-            processed_writer.writerow([f"${sale}", row["date"], row["region"]])
+            processed_writer.writerow([sale, row["date"], row["region"]])
 
 if __name__ == "__main__":
     frame = concat_data()
