@@ -2,10 +2,10 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 
-from dash import Dash, dcc, html, dash_table
-import plotly.express as px
+from dash import Dash, dcc, html
 import pandas as pd
 import plotly.graph_objs as go
+from dash.dependencies import Input, Output
 
 app = Dash(__name__)
 
@@ -23,77 +23,96 @@ df_region_sales = df.groupby(['date', 'region'], as_index=False)['sales'].sum()
 df_total_sales = df.groupby(['date'], as_index=False)['sales'].sum()
 df_total_sales['region'] = 'Total'
 
-# Just show total sales for now
-df_combined = pd.concat([df_total_sales], ignore_index=True)
-
-# fig = go.Figure()
-# Add lines for each region
-# for region in df_combined['region'].unique():
-#     region_df = df_combined[df_combined['region'] == region]
-#     fig.add_trace(go.Scatter(x=region_df['date'], y=region_df['sales'], mode='lines', name=region,
-#                              hovertemplate='<b>Date</b>: %{x|%d %b, %Y}' + '<br>' +
-#                              '<b>Sales</b>: $%{y:.2f}<extra></extra>',))
-
+# Initial
 fig = go.Figure()
+
 fig.add_trace(go.Scatter(
-    x=df_combined['date'], 
-    y=df_combined['sales'],
-    mode='lines', 
+    x=df_total_sales['date'],
+    y=df_total_sales['sales'],
+    mode='lines',
     name='Total',
     hovertemplate='<b>Date</b>: %{x|%d %b, %Y}' + '<br>' +
-                 '<b>Sales</b>: $%{y:.2f}<extra></extra>',
+    '<b>Sales</b>: $%{y:.2f}<extra></extra>',
 ))
 
-# Customize layout
 fig.update_layout(
-    title="Total Sales Over Time",
+    title=f"Sales Over Time - Total",
     xaxis_title="Date",
     xaxis_tickformat='%B %Y',
     xaxis=dict(
         tickmode="linear",
-        dtick="M6",
+        dtick="M6"
     ),
     yaxis_title="Sales ($)",
     width=1200,
     height=600,
 )
 
-app.layout = html.Div(style={'display': 'flex', 'flexDirection': 'column'}, children=[
+
+@app.callback(
+    Output('line-chart', 'figure'),
+    [Input('region-filter', 'value')]
+)
+def update_graph(selected_region):
+    if selected_region == 'Total':
+        filtered_df = df_total_sales
+    else:
+        filtered_df = df_region_sales[df_region_sales['region'] ==
+                                      selected_region.lower()]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=filtered_df['date'],
+        y=filtered_df['sales'],
+        mode='lines',
+        name='Total',
+        hovertemplate='<b>Date</b>: %{x|%d %b, %Y}' + '<br>' +
+        '<b>Sales</b>: $%{y:.2f}<extra></extra>',
+    ))
+
+    fig.update_layout(
+        title=f"Sales Over Time - {selected_region.capitalize()}",
+        xaxis_title="Date",
+        xaxis_tickformat='%B %Y',
+        xaxis=dict(
+            tickmode="linear",
+            dtick="M6",
+        ),
+        yaxis_title="Sales ($)",
+        width=1200,
+        height=600,
+    )
+
+    return fig
+
+
+app.layout = html.Div(style={'display': 'flex', 'flexDirection': 'row', 'alignItems': 'center', 'justifyItems': 'center', 'fontFamily': 'Helvitica, sans-serif'}, children=[
     html.Div(
-        style={'display': 'flex', 'justifyContent': 'center'}, children=[
+        style={'display': 'flex', 'justifyContent': 'center'},
+        children=[
             dcc.Graph(
                 id='line-chart',
-                figure=fig
-            )
-        ]),
+                figure=fig,
+            ),
 
-    html.Div(
-        children=[
-            dash_table.DataTable(
-                data=df.to_dict('records'),
-                columns=[
-                    {'id': 'sales_display', 'name': 'sales'},
-                    {'id': 'region', 'name': 'region'},
-                    {'id': 'date', 'name': 'date'}
-                ],
-                style_table={
-                    'height': '300px',
-                    'overflowX': 'auto',
-                },
-                style_header={
-                    'font-weight': 'bold'
-                },
-                style_cell_conditional=[
-                    {
-                        'if': {'column_id': c},
-                        'textAlign': 'center'
-                    } for c in ['sales_display', 'date', 'region']
-                ],
-                style_as_list_view=True
-            )
         ]
     ),
+    html.Div(
+        children=[
+            html.H3("Filter by region"),
+            dcc.RadioItems(
+                id='region-filter',
+                options=[{'label': region.capitalize(), 'value': region} for region in df['region'].unique(
+                )] + [{'label': 'Total', 'value': 'Total'}],
+                value="Total",
+                labelStyle={'display': 'inline-block', 'margin': '5px',
+                            'padding': '8px', 'backgroundColor': '#f0f0f0', 'borderRadius': '8px'},
+                style={'display': 'flex', 'flex-direction': 'column'}
+            )
+        ]
+    )
 ])
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
