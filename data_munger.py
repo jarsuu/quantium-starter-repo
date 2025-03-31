@@ -6,7 +6,7 @@ PRODUCT_FILTER = "pink morsel"
 
 def concat_data():
     path = "data/*.csv"
-    data_files = glob.glob(path)
+    data_files = sorted(glob.glob(path))
 
     li = []
     for data_file in data_files:
@@ -42,5 +42,5 @@ def extract_data(frame):
 if __name__ == "__main__":
     frame = concat_data()
     pink_morsel_only_frame = filter_pink_morsel(frame)
-
+    
     extract_data(pink_morsel_only_frame)
